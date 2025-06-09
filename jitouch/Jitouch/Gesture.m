@@ -140,6 +140,8 @@ static NSDate *lastThreeFingerDate;
 static BOOL trackpadTab4Triggered = FALSE;
 static int trackpadTab4Step[2] = {0, 0};
 static BOOL fourFingerTapTriggered = FALSE;
+static BOOL oneFixTapTriggered = FALSE;
+static BOOL oneFixTapPending = FALSE;
 
 static int trigger = 0;
 
@@ -219,6 +221,8 @@ static bool familyIsMagicTrackpad(int familyID) {
 
 static void turnOffTrackpad() {
     trackpadNFingers = 0;
+    oneFixTapTriggered = FALSE;
+    oneFixTapPending = FALSE;
 }
 
 static void turnOffMagicMouse() {
@@ -1597,6 +1601,7 @@ static void gestureTrackpadOneFixOneTap(const Finger *data, int nFingers, double
                 if ((data[0].identifier == fixId || data[0].size > stvt / 10) &&
                    (data[1].identifier == fixId || data[1].size > stvt / 10)) {
                     step = 2;
+                    oneFixTapPending = TRUE;
                     avgx = (data[0].px + data[1].px) / 2;
                     avgy = (data[0].py + data[1].py) / 2;
                     fing[0][0] = data[0].px;
@@ -1604,19 +1609,25 @@ static void gestureTrackpadOneFixOneTap(const Finger *data, int nFingers, double
                     fing[1][0] = data[1].px;
                     fing[1][1] = data[1].py;
                 }
-            } else
+            } else {
                 step = 0;
+                oneFixTapPending = FALSE;
+            }
         } else if (nFingers == 1) {
             sttime = -1;
             fixId = data[0].identifier;
-        } else
+        } else {
             step = 0;
+            oneFixTapPending = FALSE;
+        }
     } else if (step == 2) {
         if (nFingers == 1) {
             if (timestamp - sttime > clickSpeed) {
                 step = 0;
+                oneFixTapPending = FALSE;
             } else {
                 if (data[0].identifier == fixId) {
+                    oneFixTapTriggered = TRUE;
                     if (enHanded ^ (avgy - data[0].py < data[0].px - avgx))
                         dispatchCommand(@"One-Fix Left-Tap", TRACKPAD);
                     else
@@ -1624,11 +1635,15 @@ static void gestureTrackpadOneFixOneTap(const Finger *data, int nFingers, double
                 }
             }
             step = 0;
+            oneFixTapPending = FALSE;
         } else if (nFingers == 2) {
-            if (lenSqr(data[0].px, data[0].py, fing[0][0], fing[0][1]) > 0.001 || lenSqr(data[1].px, data[1].py, fing[1][0], fing[1][1]) > 0.001)
+            if (lenSqr(data[0].px, data[0].py, fing[0][0], fing[0][1]) > 0.001 || lenSqr(data[1].px, data[1].py, fing[1][0], fing[1][1]) > 0.001) {
                 step = 0;
+                oneFixTapPending = FALSE;
+            }
         } else {
             step = 0;
+            oneFixTapPending = FALSE;
         }
     }
 }
@@ -2932,10 +2947,13 @@ static void multitouchDeviceRemoved(void* refCon, io_iterator_t iterator) {
 static CGEventRef CGEventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
     if (type == kCGEventLeftMouseDown) {
         double timeInterval = fabs([lastTwoFingerDate timeIntervalSinceNow]);
-        bool suppress = trackpadHasTwoFingers || timeInterval < 0.05;
+        bool suppress = trackpadHasTwoFingers || timeInterval < 0.05 || oneFixTapTriggered || oneFixTapPending;
         if (suppress) {
             if (logLevel >= LOG_LEVEL_DEBUG)
-                dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Suppressed MouseDown with %d fingers d=%f t=%f", trackpadNFingers, twoFingersDistance, timeInterval);});
+                dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Suppressed MouseDown with %d fingers d=%f t=%f oneFixTap=%d oneFixPending=%d", trackpadNFingers, twoFingersDistance, timeInterval, oneFixTapTriggered, oneFixTapPending);});
+            if (oneFixTapTriggered) {
+                oneFixTapTriggered = FALSE;
+            }
             return NULL;
         } else if (logLevel >= LOG_LEVEL_DEBUG)
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Did not suppress MouseDown with %d fingers d=%f t=%f", trackpadNFingers, twoFingersDistance, timeInterval);});
