@@ -8,9 +8,6 @@
 #import "KeyUtility.h"
 #import <Carbon/Carbon.h>
 
-// to suppress "'CGPostKeyboardEvent' is deprecated" warnings
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
 @implementation KeyUtility
 
 static CGKeyCode a[128];
@@ -52,29 +49,29 @@ static void languageChanged(CFNotificationCenterRef center, void *observer, CFSt
     return self;
 }
 
+- (void)postKeyCode:(CGKeyCode)code down:(BOOL)down flags:(CGEventFlags)flags {
+    CGEventRef e = CGEventCreateKeyboardEvent(NULL, code, down);
+    CGEventSetFlags(e, flags);
+    CGEventPost(kCGSessionEventTap, e);
+    CFRelease(e);
+}
+
 - (void)simulateKeyCode:(CGKeyCode)code ShftDown:(BOOL)shft CtrlDown:(BOOL)ctrl AltDown:(BOOL)alt CmdDown:(BOOL)cmd {
+    // Press modifier keys; flags accumulate as each goes down
+    CGEventFlags active = 0;
+    if (shft) { active |= kCGEventFlagMaskShift;     [self postKeyCode:56      down:YES flags:active]; }
+    if (ctrl) { active |= kCGEventFlagMaskControl;   [self postKeyCode:59      down:YES flags:active]; }
+    if (alt)  { active |= kCGEventFlagMaskAlternate; [self postKeyCode:58      down:YES flags:active]; }
+    if (cmd)  { active |= kCGEventFlagMaskCommand;   [self postKeyCode:55      down:YES flags:active]; }
 
-     if (shft)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)56, true);
-     if (ctrl)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)59, true);
-     if (alt)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)58, true);
-     if (cmd)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)55, true);
+    [self postKeyCode:a[code] down:YES flags:active];
+    [self postKeyCode:a[code] down:NO  flags:active];
 
-     CGPostKeyboardEvent((CGCharCode)0, a[code], true);
-     CGPostKeyboardEvent((CGCharCode)0, a[code], false);
-
-     if (shft)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)56, false);
-     if (ctrl)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)59, false);
-     if (alt)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)58, false);
-     if (cmd)
-     CGPostKeyboardEvent((CGCharCode)0, (CGKeyCode)55, false);
-
+    // Release modifier keys; flags shrink as each goes up
+    if (cmd)  { active &= ~kCGEventFlagMaskCommand;   [self postKeyCode:55 down:NO flags:active]; }
+    if (alt)  { active &= ~kCGEventFlagMaskAlternate; [self postKeyCode:58 down:NO flags:active]; }
+    if (ctrl) { active &= ~kCGEventFlagMaskControl;   [self postKeyCode:59 down:NO flags:active]; }
+    if (shft) { active &= ~kCGEventFlagMaskShift;     [self postKeyCode:56 down:NO flags:active]; }
 }
 
 - (void) simulateKey:(NSString *)key ShftDown:(BOOL)shft CtrlDown:(BOOL)ctrl AltDown:(BOOL)alt CmdDown:(BOOL)cmd {
