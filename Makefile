@@ -5,7 +5,18 @@ ZIP := $(BUILD_DIR)/Jitouch.prefPane.zip
 INSTALL_DIR := /Library/PreferencePanes
 XCODEBUILD_FLAGS ?=
 
-.PHONY: all app pane test zip zip-only install clean
+VERSION = $(shell sed -n 's/^MARKETING_VERSION = //p' Config/Jitouch.xcconfig)
+RELEASE_DIR := $(BUILD_DIR)/release
+# Sparkle's command line tools, matching the framework version the app embeds.
+SPARKLE_VERSION := 2.9.6
+SPARKLE_BIN := $(BUILD_DIR)/sparkle/bin
+# EdDSA key that signs updates: the "jitouch" account in the login keychain
+# by default, or a file (- reads it from stdin).
+ED_KEY_FILE ?=
+ED_KEY_FLAGS = $(if $(ED_KEY_FILE),--ed-key-file $(ED_KEY_FILE),--account jitouch)
+DOWNLOAD_URL_PREFIX ?= https://github.com/tonioriol/Jitouch/releases/download/v$(VERSION)/
+
+.PHONY: all app pane test zip zip-only appcast install clean
 
 all: pane
 
@@ -29,6 +40,22 @@ zip: pane zip-only
 zip-only:
 	rm -f $(ZIP)
 	ditto -c -k --keepParent $(PANE) $(ZIP)
+
+# Sparkle feed for the zipped pane, with the release notes since 2.83.0
+# embedded. The release attaches both files to the GitHub release.
+appcast: $(SPARKLE_BIN)/generate_appcast
+	rm -rf $(RELEASE_DIR)
+	mkdir -p $(RELEASE_DIR)
+	cp $(ZIP) $(RELEASE_DIR)/Jitouch-$(VERSION).prefPane.zip
+	scripts/release-notes.sh > $(RELEASE_DIR)/Jitouch-$(VERSION).prefPane.html
+	$(SPARKLE_BIN)/generate_appcast $(ED_KEY_FLAGS) --embed-release-notes \
+		--download-url-prefix "$(DOWNLOAD_URL_PREFIX)" \
+		--link https://github.com/tonioriol/Jitouch $(RELEASE_DIR)
+
+$(SPARKLE_BIN)/generate_appcast:
+	mkdir -p $(BUILD_DIR)/sparkle
+	curl -fsSL https://github.com/sparkle-project/Sparkle/releases/download/$(SPARKLE_VERSION)/Sparkle-$(SPARKLE_VERSION).tar.xz \
+		| tar -xJf - -C $(BUILD_DIR)/sparkle ./bin
 
 install: pane
 	-killall Jitouch
