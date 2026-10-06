@@ -1,0 +1,30 @@
+# Cocogitto drives releases from Conventional Commits:
+# https://docs.cocogitto.io/reference/config.html
+tag_prefix = "v"
+branch_whitelist = ["main"]
+ignore_merge_commits = true
+skip_ci = "[skip ci]"
+
+# Write the new version where the build reads it. cog adds the modified files
+# to the release commit.
+pre_bump_hooks = [
+    "sed -E -i '' 's/^(MARKETING_VERSION|CURRENT_PROJECT_VERSION) = .*/\\1 = {{version}}/' Config/Jitouch.xcconfig",
+    "sed -E -i '' 's/\"Version [-0-9A-Za-z.]*\"/\"Version {{version}}\"/' prefpane/Base.lproj/JitouchPref.xib",
+]
+
+[commit_types]
+# Keep housekeeping out of the changelog and the update notes.
+chore = { changelog_title = "Miscellaneous Chores", omit_from_changelog = true }
+ci = { changelog_title = "Continuous Integration", omit_from_changelog = true }
+build = { changelog_title = "Build System", omit_from_changelog = true }
+test = { changelog_title = "Tests", omit_from_changelog = true }
+docs = { changelog_title = "Documentation", omit_from_changelog = true }
+style = { changelog_title = "Style", omit_from_changelog = true }
+refactor = { changelog_title = "Refactoring", omit_from_changelog = true }
+
+[changelog]
+path = "CHANGELOG.md"
+template = "remote"
+remote = "github.com"
+owner = "tonioriol"
+repository = "Jitouch"
