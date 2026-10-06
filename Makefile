@@ -21,13 +21,13 @@ DOWNLOAD_URL_PREFIX ?= https://github.com/tonioriol/Jitouch/releases/download/v$
 all: pane
 
 app:
-	xcodebuild -project jitouch/Jitouch/Jitouch.xcodeproj -scheme Jitouch -configuration Release \
+	xcodebuild -project jitouch/Jitouch/Jitouch.xcodeproj -scheme Jitouch -configuration Release -destination 'generic/platform=macOS' \
 		-derivedDataPath $(BUILD_DIR)/app $(XCODEBUILD_FLAGS) build
 
 pane: app
 	rm -rf prefpane/Jitouch.app
 	ditto $(APP) prefpane/Jitouch.app
-	xcodebuild -project prefpane/Jitouch.xcodeproj -scheme Jitouch -configuration Release \
+	xcodebuild -project prefpane/Jitouch.xcodeproj -scheme Jitouch -configuration Release -destination 'generic/platform=macOS' \
 		-derivedDataPath $(BUILD_DIR)/pane $(XCODEBUILD_FLAGS) build
 	codesign --verify --deep --strict $(PANE)
 
