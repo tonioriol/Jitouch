@@ -73,7 +73,8 @@ static void check(NSView *v) {
                    [NSStringFromRect(f) UTF8String], [NSStringFromRect(b) UTF8String]);
             failures++;
         }
-        if ([s isKindOfClass:[NSButton class]] && [[(NSButton *)s title] length]) {
+        // Pop-up buttons size to their widest menu item, so only check plain buttons.
+        if ([s isKindOfClass:[NSButton class]] && ![s isKindOfClass:[NSPopUpButton class]] && [[(NSButton *)s title] length]) {
             CGFloat w = [[(NSButton *)s cell] cellSize].width;
             if (w > f.size.width + 0.5) {
                 printf("  FAIL button title clipped: %s needs %.0f has %.0f\n", [label(s) UTF8String], w, f.size.width);
