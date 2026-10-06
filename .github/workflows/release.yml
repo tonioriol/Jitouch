@@ -1,19 +1,61 @@
 name: Release
 
+# Every push to main with user-facing Conventional Commits (feat, fix, perf or
+# a breaking change) since the last tag releases the next version: Cocogitto
+# bumps the version, updates CHANGELOG.md, commits and tags; the pane is
+# built, signed, notarized and published with a Sparkle appcast.
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: cocogitto/cocogitto-action@v3
+
+      - name: Compute next version
+        id: next
+        run: |
+          # Prints the next tag (e.g. v2.84.0), or nothing when no commit since
+          # the last tag needs a release.
+          NEXT="$(cog bump --auto --dry-run 2>/dev/null || true)"
+          if [[ "$NEXT" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "version=${NEXT#v}" >> "$GITHUB_OUTPUT"
+            echo "Next version: ${NEXT#v}"
+          else
+            echo "Nothing to release"
+          fi
+
   release:
+    needs: decide
+    if: needs.decide.outputs.version != ''
+    # Xcode 16.4 is the newest Xcode that builds for macOS 10.13.
     runs-on: macos-15
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      VERSION: ${{ needs.decide.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Cocogitto
+        run: brew install cocogitto
 
       - name: Import Developer ID certificate
         env:
@@ -28,14 +70,36 @@ jobs:
           echo "$CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
           security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          # shellcheck disable=SC2046
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
           rm "$RUNNER_TEMP/cert.p12"
+
+      - name: Bump version, changelog and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cog bump --version "$VERSION"
 
       - name: Test
         run: make test
 
       - name: Build and sign
         run: make zip
+
+      - name: Check minimum macOS
+        run: |
+          PANE=build/pane/Build/Products/Release/Jitouch.prefPane
+          APP=$PANE/Contents/Resources/Jitouch.app
+          for plist in $PANE/Contents/Info.plist $APP/Contents/Info.plist \
+              $APP/Contents/Frameworks/Sparkle.framework/Resources/Info.plist; do
+            plutil -extract LSMinimumSystemVersion raw "$plist" | grep -x 10.13
+          done
+          plutil -extract CFBundleVersion raw $PANE/Contents/Info.plist | grep -x "$VERSION"
+          # Intel Macs must be able to load the pane and install updates.
+          for bin in $PANE/Contents/MacOS/Jitouch $APP/Contents/MacOS/Jitouch; do
+            lipo "$bin" -verify_arch x86_64
+            lipo "$bin" -verify_arch arm64
+          done
 
       - name: Notarize and staple
         env:
@@ -48,10 +112,27 @@ jobs:
           xcrun stapler staple build/pane/Build/Products/Release/Jitouch.prefPane
           make zip-only
 
+      - name: Sign the update and write the appcast
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$RUNNER_TEMP/ed25519.key"
+          make appcast ED_KEY_FILE="$RUNNER_TEMP/ed25519.key"
+          rm "$RUNNER_TEMP/ed25519.key"
+          grep -q "<sparkle:version>$VERSION</sparkle:version>" build/release/appcast.xml
+          ! grep -q "<sparkle:hardwareRequirements>" build/release/appcast.xml
+
+      - name: Push release commit and tag
+        run: git push --atomic origin HEAD:main "v$VERSION"
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mv build/Jitouch.prefPane.zip "build/Jitouch-${GITHUB_REF_NAME#v}.prefPane.zip"
-          gh release create "$GITHUB_REF_NAME" "build/Jitouch-${GITHUB_REF_NAME#v}.prefPane.zip" \
-            --title "Jitouch ${GITHUB_REF_NAME#v}" --generate-notes
+          cog changelog --at "v$VERSION" > "$RUNNER_TEMP/notes.md"
+          gh release create "v$VERSION" --title "Jitouch $VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
+            "build/release/Jitouch-$VERSION.prefPane.zip" build/release/appcast.xml
+
+      - name: Remove signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/build.keychain" || true
