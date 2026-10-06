@@ -13,14 +13,15 @@ pre_bump_hooks = [
 ]
 
 [commit_types]
-# Keep housekeeping out of the changelog and the update notes.
-chore = { changelog_title = "Miscellaneous Chores", omit_from_changelog = true }
-ci = { changelog_title = "Continuous Integration", omit_from_changelog = true }
-build = { changelog_title = "Build System", omit_from_changelog = true }
-test = { changelog_title = "Tests", omit_from_changelog = true }
-docs = { changelog_title = "Documentation", omit_from_changelog = true }
-style = { changelog_title = "Style", omit_from_changelog = true }
-refactor = { changelog_title = "Refactoring", omit_from_changelog = true }
+# Housekeeping neither appears in the changelog and update notes nor triggers
+# a release on its own.
+chore = { changelog_title = "Miscellaneous Chores", omit_from_changelog = true, bump_patch = false }
+ci = { changelog_title = "Continuous Integration", omit_from_changelog = true, bump_patch = false }
+build = { changelog_title = "Build System", omit_from_changelog = true, bump_patch = false }
+test = { changelog_title = "Tests", omit_from_changelog = true, bump_patch = false }
+docs = { changelog_title = "Documentation", omit_from_changelog = true, bump_patch = false }
+style = { changelog_title = "Style", omit_from_changelog = true, bump_patch = false }
+refactor = { changelog_title = "Refactoring", omit_from_changelog = true, bump_patch = false }
 
 [changelog]
 path = "CHANGELOG.md"
