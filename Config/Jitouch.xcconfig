@@ -1,0 +1,20 @@
+// Shared build settings for the Jitouch app and preference pane.
+
+MARKETING_VERSION = 2.82.1
+CURRENT_PROJECT_VERSION = 2.82.1
+
+// Oldest macOS Jitouch supports. Xcode 16.4 is the newest Xcode that can
+// build for it; newer Xcode versions need Local.xcconfig (see README).
+MACOSX_DEPLOYMENT_TARGET = 10.13
+
+// Developer ID signing keeps the same code identity across builds, so the
+// Accessibility permission survives updates.
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Developer ID Application
+DEVELOPMENT_TEAM = B65K228Z97
+PROVISIONING_PROFILE_SPECIFIER =
+ENABLE_HARDENED_RUNTIME = YES
+OTHER_CODE_SIGN_FLAGS = --timestamp
+
+// Optional, git-ignored per-machine overrides.
+#include? "Local.xcconfig"

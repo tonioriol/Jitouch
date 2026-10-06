@@ -1,0 +1,10 @@
+// Copy to Config/Local.xcconfig for per-machine overrides. It is git-ignored.
+
+// Xcode 26 and later cannot build for macOS 10.13; build for this Mac only.
+MACOSX_DEPLOYMENT_TARGET = 12.0
+
+// Without a Developer ID certificate, sign ad hoc. macOS then asks for the
+// Accessibility permission again after every rebuild.
+// CODE_SIGN_IDENTITY = -
+// DEVELOPMENT_TEAM =
+// OTHER_CODE_SIGN_FLAGS =
