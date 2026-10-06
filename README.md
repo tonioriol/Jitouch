@@ -21,6 +21,8 @@ This is a maintained continuation of [JitouchApp/Jitouch](https://github.com/Jit
 2. Unzip it and double-click `Jitouch.prefPane`, then choose whether to install it for all users or only for you.
 3. When macOS asks, allow Jitouch in **System Settings → Privacy & Security → Accessibility**.
 
+Jitouch checks for updates on its own and shows what changed before installing one. To check now, choose **Check for Updates…** in the Jitouch menu bar icon or in the About tab of its settings.
+
 ## Troubleshooting
 
 **Gestures do nothing.** Jitouch is running but doesn't have the Accessibility permission. Its log (`~/Library/Logs/com.jitouch.Jitouch.log`) says "Could not create CGEventTap".
@@ -49,17 +51,22 @@ Newer Xcode versions can only build for macOS 12 and later. To build with them, 
 
 ## Releasing
 
-```sh
-scripts/bump-version.sh 2.83.0
-git push --follow-tags
-```
+Releases are automatic. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/), and every push to `main` that contains a `feat`, `fix`, `perf` or breaking change since the last tag:
 
-Pushing a `v*` tag builds, signs and notarizes the preference pane, then publishes it as a GitHub release.
+1. bumps the version with [Cocogitto](https://docs.cocogitto.io/) (`feat` → minor, `fix`/`perf` → patch, breaking → major), updates `CHANGELOG.md`, commits and tags `v<version>`;
+2. builds, signs and notarizes the preference pane;
+3. signs the update and writes a [Sparkle](https://sparkle-project.org/) `appcast.xml` whose release notes list the changes since each user's installed version;
+4. publishes the zip and `appcast.xml` as a GitHub release. Installed copies read the feed from `releases/latest/download/appcast.xml`.
+
+Other commit types (`chore`, `ci`, `docs`, `build`, `refactor`, `style`, `test`) never trigger a release. To preview the next version, run `cog bump --auto --dry-run`.
 
 The release workflow needs these repository secrets:
 
 - `DEVELOPER_ID_CERTIFICATE_BASE64` and `DEVELOPER_ID_CERTIFICATE_PASSWORD`: the `.p12` export of the Developer ID Application certificate.
 - `APPLE_ID`, `APPLE_TEAM_ID` and `APPLE_APP_SPECIFIC_PASSWORD`: used for notarization.
+- `SPARKLE_ED_PRIVATE_KEY`: the EdDSA key that signs updates. It matches `SUPublicEDKey` in [`prefpane/Info.plist`](prefpane/Info.plist). Export it with Sparkle's `generate_keys --account jitouch -x <file>`.
+
+To test updates locally, set `JITOUCH_FEED_URL` in `Config/Local.xcconfig` to a local server, then write a feed with `make zip appcast DOWNLOAD_URL_PREFIX=<server URL>/`.
 
 ## Credits
 
