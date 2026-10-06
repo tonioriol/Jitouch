@@ -238,7 +238,7 @@ DQ
                                 </textFieldCell>
                             </textField>
                             <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="183">
-                                <rect key="frame" x="18" y="27" width="182" height="18"/>
+                                <rect key="frame" x="18" y="27" width="200" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="Show Icon in Menu Bar" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="202">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -405,7 +405,7 @@ DQ
                                             </connections>
                                         </button>
                                         <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="367">
-                                            <rect key="frame" x="15" y="341" width="220" height="18"/>
+                                            <rect key="frame" x="15" y="341" width="250" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="Enable jitouch for Trackpad" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="368">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -554,7 +554,7 @@ DQ
                                             </connections>
                                         </button>
                                         <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="369">
-                                            <rect key="frame" x="15" y="341" width="220" height="18"/>
+                                            <rect key="frame" x="15" y="341" width="250" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="Enable jitouch for Magic Mouse" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="370">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
