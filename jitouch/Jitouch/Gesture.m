@@ -231,14 +231,16 @@ static void turnOffMagicMouse() {
     simulating = 0;
     disableHorizontalScroll = 0;
     quickTabSwitching = 0;
-    [cursorWindow orderOut:nil];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [cursorWindow orderOut:nil];
+    });
 }
 
 static void turnOffCharacters() {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    [gestureWindow clear];
-    [gestureWindow orderOut:nil];
-    [pool release];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [gestureWindow clear];
+        [gestureWindow orderOut:nil];
+    });
     isTrackpadRecognizing = 0;
     isMouseRecognizing = 0;
 }
@@ -544,8 +546,10 @@ static void findTabGroup2(CFTypeRef windowRef, float cx, float cy) {
         }
         CFRelease(tmp);
     }
-    NSRect scr = [[NSScreen mainScreen] frame];
-    [cursorWindow setFrameOrigin:NSMakePoint(cx - 31, scr.size.height - tabY - 20)];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSRect scr = [[NSScreen mainScreen] frame];
+        [cursorWindow setFrameOrigin:NSMakePoint(cx - 31, scr.size.height - tabY - 20)];
+    });
 }
 
 static int selectSafariTab() {
@@ -2458,7 +2462,9 @@ static int gestureMagicMouseV(const Finger *data, int nFingers) {
         CGFloat x, y;
         getMousePosition(&x, &y);
         if (init || x != lastMouseX || y != lastMouseY) {
-            setCursorWindowAtMouse();
+            dispatch_async(dispatch_get_main_queue(), ^{
+                setCursorWindowAtMouse();
+            });
             if (type == 1) {
                 setWindowPos2(cWindow, x, y, baseX, baseY, appX, appY);
             } else if (type == 2) {
@@ -2600,11 +2606,11 @@ static int gestureMagicMouseThumb(const Finger *data, int nFingers) {
                     findTabGroup_lx = -99999;
                     if (selectSafariTab()) { // mouse is on Safari
                         cursorImageType = 2;
-                        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-                        [cursorWindow display];
-                        [cursorWindow setLevel:NSScreenSaverWindowLevel];
-                        [cursorWindow makeKeyAndOrderFront:nil];
-                        [pool release];
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [cursorWindow display];
+                            [cursorWindow setLevel:NSScreenSaverWindowLevel];
+                            [cursorWindow makeKeyAndOrderFront:nil];
+                        });
                         type = 1;
                         quickTabSwitching = 1;
                     }
@@ -2627,9 +2633,9 @@ static int gestureMagicMouseThumb(const Finger *data, int nFingers) {
             }
             ret = tb + 1;
         } else if (type == 1) {
-            NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-            [cursorWindow orderOut:nil];
-            [pool release];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [cursorWindow orderOut:nil];
+            });
             type = 0;
             quickTabSwitching = 0;
 
@@ -2645,9 +2651,9 @@ static int gestureMagicMouseThumb(const Finger *data, int nFingers) {
             }
         }
     } else if (type == 1) {
-        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-        [cursorWindow orderOut:nil];
-        [pool release];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [cursorWindow orderOut:nil];
+        });
         type = 0;
         quickTabSwitching = 0;
 
