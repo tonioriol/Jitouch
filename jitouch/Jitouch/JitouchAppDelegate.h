@@ -9,12 +9,14 @@
 
 @class CursorWindow;
 @class Gesture;
+@class JitouchUpdater;
 
 @interface JitouchAppDelegate : NSObject <NSApplicationDelegate> {
     NSWindow *window;
     Gesture *gesture;
     NSMenu *theMenu;
     NSStatusItem *theItem;
+    JitouchUpdater *updater;
 }
 
 @property (assign) IBOutlet NSWindow *window;

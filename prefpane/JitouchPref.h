@@ -25,6 +25,7 @@
 }
 
 - (IBAction)change:(id)sender;
+- (IBAction)checkForUpdates:(id)sender;
 - (void) mainViewDidLoad;
 
 @end

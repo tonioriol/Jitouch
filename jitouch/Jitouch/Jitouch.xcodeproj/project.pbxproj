@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -37,7 +37,10 @@
 		A8D4973710918F7E005C3998 /* resize.png in Resources */ = {isa = PBXBuildFile; fileRef = A8D4973610918F7E005C3998 /* resize.png */; };
 		A8DB0A4A10842620000A2A08 /* logosmall.png in Resources */ = {isa = PBXBuildFile; fileRef = A8DB0A4910842620000A2A08 /* logosmall.png */; };
 		A8EB72071085318200563ED4 /* logosmalloff.png in Resources */ = {isa = PBXBuildFile; fileRef = A8EB72061085318200563ED4 /* logosmalloff.png */; };
+		5A1C0F1C0000000000000010 /* JitouchUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 5A1C0F1C0000000000000012 /* JitouchUpdater.m */; };
+		5A1C0F1C0000000000000013 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 5A1C0F1C0000000000000016 /* Sparkle */; };
 /* End PBXBuildFile section */
+
 
 /* Begin PBXFileReference section */
 		5A1C0F1C0000000000000001 /* Jitouch.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Jitouch.xcconfig; path = ../../Config/Jitouch.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -87,6 +90,8 @@
 		A8EB72061085318200563ED4 /* logosmalloff.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logosmalloff.png; path = ../logosmalloff.png; sourceTree = SOURCE_ROOT; };
 		D7730023274C86F000C49145 /* JitouchDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JitouchDebug.entitlements; sourceTree = "<group>"; };
 		D7AE605B274C7A8400FBD29A /* Jitouch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Jitouch.entitlements; sourceTree = "<group>"; };
+		5A1C0F1C0000000000000011 /* JitouchUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JitouchUpdater.h; sourceTree = "<group>"; };
+		5A1C0F1C0000000000000012 /* JitouchUpdater.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JitouchUpdater.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +104,7 @@
 				7B703DBB262EBEB2002157DD /* IOKit.framework in Frameworks */,
 				7B703DBD262EBEB7002157DD /* ScriptingBridge.framework in Frameworks */,
 				7B703DBF262EBED6002157DD /* MultitouchSupport.framework in Frameworks */,
+				5A1C0F1C0000000000000013 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +118,8 @@
 				1B4F3CC610AA45500062367C /* Settings.m */,
 				256AC3D80F4B6AC300CF3369 /* JitouchAppDelegate.h */,
 				256AC3D90F4B6AC300CF3369 /* JitouchAppDelegate.m */,
+				5A1C0F1C0000000000000011 /* JitouchUpdater.h */,
+				5A1C0F1C0000000000000012 /* JitouchUpdater.m */,
 				1BF5AA6D10790134000CF532 /* Gesture.h */,
 				1BF5AA6E10790134000CF532 /* Gesture.m */,
 				1B981CE210916F5400652C8F /* CursorWindow.h */,
@@ -218,12 +226,16 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				5A1C0F1C0000000000000018 /* Sign Sparkle Helpers */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = Jitouch;
+			packageProductDependencies = (
+				5A1C0F1C0000000000000016 /* Sparkle */,
+			);
 			productInstallPath = "$(HOME)/Applications";
 			productName = Jitouch;
 			productReference = A84E892C1081B6980047B86A /* Jitouch.app */;
@@ -246,6 +258,9 @@
 				en,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* Jitouch */;
+			packageReferences = (
+				5A1C0F1C0000000000000015 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -279,6 +294,25 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		5A1C0F1C0000000000000018 /* Sign Sparkle Helpers */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Sign Sparkle Helpers";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Xcode signs only the outer Sparkle.framework when embedding it. Developer ID\n# distribution and notarization need its helpers signed with our identity and\n# the hardened runtime too, inside-out (https://sparkle-project.org/documentation/sandboxing/#code-signing).\nset -e\n[ \"$CODE_SIGNING_ALLOWED\" = \"YES\" ] || exit 0\nSPARKLE=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/Sparkle.framework\"\nsign() { codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime $OTHER_CODE_SIGN_FLAGS \"$@\"; }\nsign \"$SPARKLE/Versions/B/XPCServices/Installer.xpc\"\nsign --preserve-metadata=entitlements \"$SPARKLE/Versions/B/XPCServices/Downloader.xpc\"\nsign \"$SPARKLE/Versions/B/Autoupdate\"\nsign \"$SPARKLE/Versions/B/Updater.app\"\nsign \"$SPARKLE\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		8D11072C0486CEB800E47090 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -286,6 +320,7 @@
 			files = (
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				256AC3DA0F4B6AC300CF3369 /* JitouchAppDelegate.m in Sources */,
+				5A1C0F1C0000000000000010 /* JitouchUpdater.m in Sources */,
 				1BF5AA6F10790134000CF532 /* Gesture.m in Sources */,
 				1B981CE410916F5400652C8F /* CursorWindow.m in Sources */,
 				1B981CF11091713E00652C8F /* CursorView.m in Sources */,
@@ -333,7 +368,9 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Jitouch_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jitouch.Jitouch;
 				PRODUCT_NAME = Jitouch;
@@ -361,7 +398,9 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Jitouch_Prefix.pch;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jitouch.Jitouch;
 				PRODUCT_NAME = Jitouch;
 				STRIP_INSTALLED_PRODUCT = YES;
@@ -463,6 +502,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5A1C0F1C0000000000000015 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.9.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5A1C0F1C0000000000000016 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5A1C0F1C0000000000000015 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
 }

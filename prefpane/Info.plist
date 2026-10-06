@@ -34,5 +34,11 @@
 	<string>Jitouch</string>
 	<key>NSPrincipalClass</key>
 	<string>JitouchPref</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>$(JITOUCH_FEED_URL)</string>
+	<key>SUPublicEDKey</key>
+	<string>zCo89H8IheLC8p6N38PuWzwxM5edfKf/mZeMCVO4Vo4=</string>
 </dict>
 </plist>

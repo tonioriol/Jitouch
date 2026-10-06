@@ -13,6 +13,7 @@
 #import <Carbon/Carbon.h>
 #import <CoreFoundation/CFPreferences.h>
 #import "SystemPreferences.h"
+#import "JitouchUpdater.h"
 
 CursorWindow *cursorWindow;
 CGKeyCode keyMap[128]; // for dvorak support
@@ -46,8 +47,13 @@ CGKeyCode keyMap[128]; // for dvorak support
 
     //[theMenu insertItem:[NSMenuItem separatorItem] atIndex:1];
     [theMenu insertItemWithTitle:@"Open Preferences..." action:@selector(preferences:) keyEquivalent:@"" atIndex:1];
-    [theMenu insertItem:[NSMenuItem separatorItem] atIndex:2];
-    [theMenu insertItemWithTitle:@"Quit Jitouch" action:@selector(quit:) keyEquivalent:@"" atIndex:3];
+    if (updater) {
+        NSMenuItem *updateItem = [[[NSMenuItem alloc] initWithTitle:@"Check for Updates..." action:@selector(checkForUpdates:) keyEquivalent:@""] autorelease];
+        [updateItem setTarget:updater];
+        [theMenu addItem:updateItem];
+    }
+    [theMenu addItem:[NSMenuItem separatorItem]];
+    [theMenu addItemWithTitle:@"Quit Jitouch" action:@selector(quit:) keyEquivalent:@""];
 
     NSStatusBar *bar = [NSStatusBar systemStatusBar];
     theItem = [bar statusItemWithLength:NSVariableStatusItemLength];
@@ -176,8 +182,14 @@ void languageChanged(CFNotificationCenterRef center, void *observer, CFStringRef
 }
 */
 
+- (void)checkForUpdates:(NSNotification *)aNotification {
+    [updater checkForUpdates:nil];
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     [Settings loadSettings];
+
+    updater = [[JitouchUpdater updaterForEnclosingPreferencePane] retain];
 
     [self refreshMenu];
 
@@ -199,6 +211,12 @@ void languageChanged(CFNotificationCenterRef center, void *observer, CFStringRef
                                                             name: @"My Notification"
                                                           object: @"com.jitouch.Jitouch.PrefpaneTarget"];
 
+    // Sent by the preference pane's "Check for Updates..." button.
+    [[NSDistributedNotificationCenter defaultCenter] addObserver:self
+                                                        selector:@selector(checkForUpdates:)
+                                                            name:@"com.jitouch.Jitouch.CheckForUpdates"
+                                                          object:nil];
+
     [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(wokeUp:) name:NSWorkspaceDidWakeNotification object: NULL];
 
     //CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(), self, languageChanged, kTISNotifySelectedKeyboardInputSourceChanged, NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
@@ -216,6 +234,7 @@ void languageChanged(CFNotificationCenterRef center, void *observer, CFStringRef
 #pragma mark -
 
 - (void) dealloc {
+    [updater release];
     [cursorWindow release];
     [super dealloc];
 }

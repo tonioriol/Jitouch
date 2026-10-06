@@ -158,7 +158,10 @@ static CGEventRef CGEventCallback(CGEventTapProxy proxy, CGEventType type, CGEve
 "    <key>RunAtLoad</key>\n"
 "    <true/>\n"
 "    <key>KeepAlive</key>\n"
-"    <true/>\n"
+"    <dict>\n"
+"        <key>SuccessfulExit</key>\n"
+"        <false/>\n"
+"    </dict>\n"
 "    <key>ProcessType</key>\n"
 "    <string>Interactive</string>\n"
 "    <key>StandardErrorPath</key>\n"
@@ -236,6 +239,14 @@ static CGEventRef CGEventCallback(CGEventTapProxy proxy, CGEventType type, CGEve
     [self loadJitouchLaunchAgent];
 
     NSLog(@"Reloaded LaunchAgent at %@", plistPath);
+}
+
+// The always-running Jitouch app owns the updater; ask it to check.
+- (IBAction)checkForUpdates:(id)sender {
+    [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"com.jitouch.Jitouch.CheckForUpdates"
+                                                                   object:nil
+                                                                 userInfo:nil
+                                                       deliverImmediately:YES];
 }
 
 - (void)mainViewDidLoad {
