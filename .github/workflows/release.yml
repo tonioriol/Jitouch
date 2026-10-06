@@ -27,6 +27,9 @@ jobs:
           fetch-depth: 0
 
       - uses: cocogitto/cocogitto-action@v3
+        with:
+          # Upstream history predates Conventional Commits.
+          check-latest-tag-only: true
 
       - name: Compute next version
         id: next
