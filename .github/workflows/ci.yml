@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: make test
+      - name: Build (unsigned)
+        run: make pane XCODEBUILD_FLAGS="CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= OTHER_CODE_SIGN_FLAGS="
+      - name: Check minimum macOS
+        run: |
+          plutil -extract LSMinimumSystemVersion raw build/pane/Build/Products/Release/Jitouch.prefPane/Contents/Info.plist | grep -x 10.13
+          plutil -extract LSMinimumSystemVersion raw build/app/Build/Products/Release/Jitouch.app/Contents/Info.plist | grep -x 10.13
