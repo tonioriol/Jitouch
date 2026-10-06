@@ -2946,19 +2946,19 @@ static void multitouchDeviceRemoved(void* refCon, io_iterator_t iterator) {
 
 static CGEventRef CGEventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
     if (type == kCGEventLeftMouseDown) {
-        double timeInterval = fabs([lastTwoFingerDate timeIntervalSinceNow]);
-        bool suppress = trackpadHasTwoFingers || timeInterval < 0.05 || oneFixTapTriggered || oneFixTapPending;
+        // Only suppress clicks for specific gesture triggers, not for general multi-finger touches
+        bool suppress = oneFixTapTriggered || oneFixTapPending;
         if (suppress) {
             if (logLevel >= LOG_LEVEL_DEBUG)
-                dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Suppressed MouseDown with %d fingers d=%f t=%f oneFixTap=%d oneFixPending=%d", trackpadNFingers, twoFingersDistance, timeInterval, oneFixTapTriggered, oneFixTapPending);});
+                dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Suppressed MouseDown oneFixTap=%d oneFixPending=%d", oneFixTapTriggered, oneFixTapPending);});
             if (oneFixTapTriggered) {
                 oneFixTapTriggered = FALSE;
             }
             return NULL;
         } else if (logLevel >= LOG_LEVEL_DEBUG)
-            dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Did not suppress MouseDown with %d fingers d=%f t=%f", trackpadNFingers, twoFingersDistance, timeInterval);});
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Did not suppress MouseDown with %d fingers", trackpadNFingers);});
     } else if (logLevel >= LOG_LEVEL_DEBUG && type == kCGEventLeftMouseUp) {
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Did not suppress MouseUp with %d fingers d=%f", trackpadNFingers, twoFingersDistance);});
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{NSLog(@"Did not suppress MouseUp with %d fingers", trackpadNFingers);});
     }
 
     if (type == kCGEventLeftMouseDown || type == kCGEventRightMouseDown) {
